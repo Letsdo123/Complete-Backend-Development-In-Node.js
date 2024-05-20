@@ -1,0 +1,16 @@
+{
+  "name": "complete-backend-development-in-node",
+  "version": "1.0.0",
+  "description": "This is all about setup of backend in node.js",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "author": "Souvick Pramanik",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5"
+  }
+}
