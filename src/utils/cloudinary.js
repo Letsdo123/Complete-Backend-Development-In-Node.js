@@ -16,6 +16,7 @@ const uploadOnCloudinary = async (localFilePath) => {
             resource_type: "auto"
         });
         console.log("Information about file::",response);
+        fs.unlinkSync(localFilePath);
         return response;
     } catch (error) {
         // The local filepath is already available 
