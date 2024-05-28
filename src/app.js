@@ -26,6 +26,10 @@ import userRouter from './routes/user.routes.js'
 app.use("/api/v1/users",userRouter);
 
 app.get("/",(req,res)=>{
+    res.send("This is main page");
+})
+
+app.get("/home",(req,res)=>{
     res.send("This is home page");
 })
 
