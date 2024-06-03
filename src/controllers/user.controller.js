@@ -233,4 +233,5 @@ const reGenerateAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(505, error?.message || "Invalid refresh token");
   }
 });
+
 export { registerUser, loginUser, logoutUser, reGenerateAccessToken };
