@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  changeCurrentPassword,
   loginUser,
   logoutUser,
   reGenerateAccessToken,
@@ -11,6 +12,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.route("/register").post(
+  // This is the multer middleware
+  // This help us to sotre files into local and gives and url
+  // that we can use to upload cloudinary
   upload.fields([
     {
       name: "avatar",
@@ -34,4 +38,8 @@ router.route("/logout").post(verifyJWT, logoutUser);
 
 // router for regenerate access token
 router.route("/refresh-token").post(reGenerateAccessToken);
+
+// updating user details fields
+router.route("/update-password").post(verifyJWT, changeCurrentPassword);
+
 export default router;

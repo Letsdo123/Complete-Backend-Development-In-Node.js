@@ -234,4 +234,118 @@ const reGenerateAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, loginUser, logoutUser, reGenerateAccessToken };
+// update user details
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  // taking the details
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user?._id);
+  const isPasswrodCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswrodCorrect) throw new ApiError(404, "Password is Incorrect");
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changes successfully"));
+});
+
+// get current user details if user is active
+const getCurrentUserDetails = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Retrived user details successfully"));
+});
+
+// update current user (text data   )
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email } = req.body;
+
+  // checkiing that if anyone is not there throw error
+  if (!email || !fullName) {
+    throw new ApiError(404, "Email and FullName both are required");
+  }
+
+  // find the user and update the details
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        fullName,
+        email,
+      },
+    },
+    { new: true }
+  ).select("-password");
+
+  // return the response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updayed successfully"));
+});
+
+// update avatar (files)
+// Basically this is an example of how to updates files to db
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath)
+    throw new ApiError(404, "Files is not updated properly");
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+  if (!avatar.url) throw new ApiError(400, "Error while uploading on avatar");
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar image sucessfully updated"));
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path;
+  console.log("The cover image local path:", coverImageLocalPath);
+  if (!coverImageLocalPath)
+    throw new ApiError(404, "Coverimage files is missing");
+  const coverImage = await uploadOnCloudinary(coverImage);
+
+  if (!coverImage.url)
+    throw new ApiError(400, "Error while uploading on cover image");
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      // This is the mongodb operator
+      // This is how we can do multiple operation like set delete or etc using the mongodb operator
+      $set: {
+        coverImage: coverImage.url,
+      },
+    },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "CoverImage image sucessfully updated"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  reGenerateAccessToken,
+  changeCurrentPassword,
+  getCurrentUserDetails,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+};
