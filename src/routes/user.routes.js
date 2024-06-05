@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   changeCurrentPassword,
+  findUserSubscriber,
   loginUser,
   logoutUser,
   reGenerateAccessToken,
@@ -41,5 +42,8 @@ router.route("/refresh-token").post(reGenerateAccessToken);
 
 // updating user details fields
 router.route("/update-password").post(verifyJWT, changeCurrentPassword);
+
+// route for getting the user subscriber
+router.route("/get-subscriber").post(findUserSubscriber);
 
 export default router;

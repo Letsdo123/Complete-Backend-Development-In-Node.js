@@ -338,6 +338,23 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "CoverImage image sucessfully updated"));
 });
 
+// learning aggregation pipeline of mongodb
+const findUserSubscriber = asyncHandler(async(req,res)=>{
+  // const {username} = req.params;
+  const username="teset1122";
+  console.log("Params in request",req);
+  if(!username)
+    throw new ApiError(404,"Username is missing");
+  const channel = await User.aggregate([
+    {
+      $match:{
+        username:username?.toLowerCase()
+      }
+    }
+  ])
+  console.log("Filtered channel",channel);
+})
+
 export {
   registerUser,
   loginUser,
@@ -348,4 +365,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  findUserSubscriber
 };
