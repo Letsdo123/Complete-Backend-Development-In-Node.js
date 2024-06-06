@@ -350,6 +350,37 @@ const findUserSubscriber = asyncHandler(async(req,res)=>{
       $match:{
         username:username?.toLowerCase()
       }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedChannelCount"
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribersCount"
+      }
+    },
+    {
+      $addFields:{
+        subscribedChannelCount:{
+          $size:"$subscribedChannelCount"
+        },
+        subsscriberCount:{
+          $size:"$subscribersCount"
+        },
+        isSubscribed:{
+          $cond:{
+            if:{$in:[req.user?._id,"$subscriber"]}
+          }
+        }
+      }
     }
   ])
   console.log("Filtered channel",channel);
