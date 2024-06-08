@@ -2,10 +2,14 @@ import { Router } from "express";
 import {
   changeCurrentPassword,
   findUserSubscriber,
+  getCurrentUserDetails,
+  getWatchHistory,
   loginUser,
   logoutUser,
   reGenerateAccessToken,
   registerUser,
+  updateAccountDetails,
+  updateUserAvatar,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -43,7 +47,20 @@ router.route("/refresh-token").post(reGenerateAccessToken);
 // updating user details fields
 router.route("/update-password").post(verifyJWT, changeCurrentPassword);
 
+// get current user details
+router.route("/current-user").post(verifyJWT, getCurrentUserDetails);
+
+// update account details
+router.route("/update-account").patch(verifyJWT, updateAccountDetails);
+
+router
+  .route("/update-avatar")
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+
 // route for getting the user subscriber
-router.route("/get-subscriber").post(findUserSubscriber);
+router.route("/c/:username").get(verifyJWT, findUserSubscriber);
+
+// for getting the watch history
+router.route("/history").get(verifyJWT, getWatchHistory);
 
 export default router;
