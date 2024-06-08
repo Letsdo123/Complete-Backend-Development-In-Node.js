@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 // creating a method that will generate access and refresh token when required
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -339,52 +340,128 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 // learning aggregation pipeline of mongodb
-const findUserSubscriber = asyncHandler(async(req,res)=>{
+const findUserSubscriber = asyncHandler(async (req, res) => {
   // const {username} = req.params;
-  const username="teset1122";
-  console.log("Params in request",req);
-  if(!username)
-    throw new ApiError(404,"Username is missing");
+  const username = "teset1122";
+  console.log("Params in request", req);
+  if (!username) throw new ApiError(404, "Username is missing");
   const channel = await User.aggregate([
     {
-      $match:{
-        username:username?.toLowerCase()
-      }
+      $match: {
+        username: username?.toLowerCase(),
+      },
     },
     {
-      $lookup:{
-        from:"subscriptions",
-        localField:"_id",
-        foreignField:"subscriber",
-        as:"subscribedChannelCount"
-      }
+      // lookup is basically searching from another document in mongodb atlas
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedChannelCount",
+      },
     },
     {
-      $lookup:{
-        from:"subscriptions",
-        localField:"_id",
-        foreignField:"channel",
-        as:"subscribersCount"
-      }
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribersCount",
+      },
     },
     {
-      $addFields:{
-        subscribedChannelCount:{
-          $size:"$subscribedChannelCount"
+      $addFields: {
+        subscribedChannelCount: {
+          $size: "$subscribedChannelCount",
         },
-        subsscriberCount:{
-          $size:"$subscribersCount"
+        subscribersCount: {
+          $size: "$subscribersCount",
         },
-        isSubscribed:{
-          $cond:{
-            if:{$in:[req.user?._id,"$subscriber"]}
-          }
-        }
-      }
-    }
-  ])
-  console.log("Filtered channel",channel);
-})
+        isSubscribed: {
+          $cond: {
+            // in can search from both object and array
+            if: { $in: [req.user?._id, "$subscribersCount.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        subscribedChannelCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+      },
+    },
+  ]);
+  console.log("Filtered channel", channel);
+  if (!channel?.length) throw new ApiError(404, "channel does not exist");
+
+  // returning the response
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Fected watch history successfully"
+      )
+    );
+});
 
 export {
   registerUser,
@@ -396,5 +473,6 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  findUserSubscriber
+  findUserSubscriber,
+  getWatchHistory,
 };
