@@ -92,13 +92,16 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     // make a query to retrive all the old data from the video id
     const video = await Video.findById(videoId);
-    console.log("Video information", video);
+
+    // These are the ilne for testing
+    /* console.log("Video information", video);
     console.log("Video owner", video.owner);
-    console.log("User Id", req.user._id);
+    console.log("User Id", req.user._id); */
+
     if (video.owner.toString() !== req.user._id.toString())
         throw new ApiError(
             404,
-            "Unauthorized access, you don;t have this permission to update this data"
+            "Unauthorized access, you don't have this permission to update this data"
         );
 
     // updated fileds thats need to be update
@@ -172,4 +175,46 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
 });
 
-export { publishAVideo, getVideoById, updateVideo };
+const togglePublishStatus = asyncHandler(async(req,res)=>{
+    const {videoId} = req.params;
+
+    // now let's toggle the publishStaus
+    const video = await Video.findById(videoId);
+    if(!video) throw new ApiError(404,"Video with this id doesn't exist");
+    // here this is the toggling the fields of isPublished
+    video.isPublished = !video.isPublished;
+
+    const updatedVideo = await video.save({ validateBeforeSave: false });
+    if(!updatedVideo) throw new ApiError(500,"something went worng while saving the video data");
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            updatedVideo,
+            "Video updated successfully"
+        )
+    )
+})
+
+const deleteVideo = asyncHandler(async(req,res)=>{
+    const {videoId} = req.params;
+    // first of all find the video
+    const video = await Video.findById(videoId);
+    if(!video) throw new ApiError(400,"Video is not found");
+    const deletedVideo = await Video.deleteOne({
+        _id:videoId
+    })
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            deletedVideo,
+            "Video deleted successfully"
+        )
+    )
+})
+export { publishAVideo, getVideoById, updateVideo ,togglePublishStatus,deleteVideo};

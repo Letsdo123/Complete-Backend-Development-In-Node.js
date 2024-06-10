@@ -11,19 +11,23 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
-        // upload the file on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath,{
+
+        if (!fs.existsSync(localFilePath)) {
+            throw new Error(`File not found: ${localFilePath}`);
+        }
+
+        console.log("Come inside try block of upload cloudinary");
+        const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
         });
-        console.log("Information about file::",response);
+        console.log("Information about file::", response);
         fs.unlinkSync(localFilePath);
         return response;
     } catch (error) {
-        // The local filepath is already available 
-        // but in case there occurs any problem during fileupload then it will unlink the fule from the server
+        console.error("Error uploading to Cloudinary:", error);
         fs.unlinkSync(localFilePath);
         return null;
     }
-}
+};
 
 export {uploadOnCloudinary}
