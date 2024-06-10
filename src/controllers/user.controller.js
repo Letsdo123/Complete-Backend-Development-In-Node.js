@@ -383,7 +383,7 @@ const findUserSubscriber = asyncHandler(async(req,res)=>{
       }
     }
   ])
-  console.log("Filtered channel",channel);
+  console.log("Filtered channel just checking",channel);
 })
 
 export {
