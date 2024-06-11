@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { addSubscription } from "../controllers/subscription.controller.js";
+import { addSubscription, getSubscribedChannels, getUserChannelSubscribers } from "../controllers/subscription.controller.js";
 
 // define the router
 const router = Router();
@@ -10,6 +10,10 @@ const router = Router();
 // If logged-in then it will inject the user details inside the request
 router.use(verifyJWT);
 
-router.route("/c/:channelId").post(addSubscription);
+router.route("/c/:channelId")
+.post(addSubscription)
+.get(getUserChannelSubscribers);
+
+router.route("/c/:subscriberId").get(getSubscribedChannels);
 
 export default router;
