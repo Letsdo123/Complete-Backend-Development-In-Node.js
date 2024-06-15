@@ -6,10 +6,11 @@ import mongoose from "mongoose";
 
 // These are the fields in subscription models
 // subscriber,channel
-const addSubscription = asyncHandler(async (req, res) => {
+const toggleSubscription = asyncHandler(async (req, res) => {
     const userId = new mongoose.Types.ObjectId(req.user._id);
     const channelId = new mongoose.Types.ObjectId(req.params.channelId);
-
+    let subscriptionStatus,
+        alreadySubscribed = false;
     // now both channelId & userId are available
     console.log("Channel Id", channelId);
     console.log("User Id", userId);
@@ -21,27 +22,31 @@ const addSubscription = asyncHandler(async (req, res) => {
         channel: channelId,
     });
     // checking for already subscribed channel
-    if (checkExistingSubscription)
-        throw new ApiError(400, "You have already subscribed to this channel");
+    if (checkExistingSubscription) {
+        subscriptionStatus = await Subscription.deleteOne({
+            subscriber: userId,
+            channel: channelId,
+        });
+    } else {
+        subscriptionStatus = await Subscription.create({
+            subscriber: userId,
+            channel: channelId,
+        });
+        alreadySubscribed = true;
+    }
 
-    const subscription = await Subscription.create({
-        subscriber: userId,
-        channel: channelId,
-    });
-
-    if (!subscription)
-        throw new ApiError(
-            500,
-            "something went wrong while storing subscription data to db"
-        );
+    if (!subscriptionStatus)
+        throw new ApiError(500, "something went wrong from server side");
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                subscription,
-                "You have subscribed the channel successfully"
+                subscriptionStatus,
+                alreadySubscribed
+                    ? "You have subscribed the channel successfully"
+                    : "You have un-subscribed the channel successfully"
             )
         );
 });
@@ -51,12 +56,16 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     // getting the subscriber id from the params
     const subscriberId = new mongoose.Types.ObjectId(req.params.subscriberId);
     console.log("SubscriberID:", subscriberId);
-    if (!subscriberId) throw new ApiError(404, "Subscriber Id is required to see the subscribed channeld details");
+    if (!subscriberId)
+        throw new ApiError(
+            404,
+            "Subscriber Id is required to see the subscribed channeld details"
+        );
     const subscribedChannel = await Subscription.aggregate([
         {
             $match: {
-                subscriber: subscriberId
-            }
+                subscriber: subscriberId,
+            },
         },
         {
             $lookup: {
@@ -70,27 +79,34 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                             username: 1,
                             fullName: 1,
                             avatar: 1,
-                            coverImage: 1
-                        }
-                    }
-                ]
-            }
+                            coverImage: 1,
+                        },
+                    },
+                ],
+            },
         },
         {
             $project: {
                 _id: 1,
                 channel: 1,
-                SubscribedChannelsDetails: 1
-            }
-        }
-    ])
+                SubscribedChannelsDetails: 1,
+            },
+        },
+    ]);
 
-    if (!subscribedChannel) throw new ApiError(500, "something went wrong while fetching the data...")
-    console.log("Subscribed channel details:", JSON.stringify(subscribedChannel, null, 2));
+    if (!subscribedChannel)
+        throw new ApiError(
+            500,
+            "something went wrong while fetching the data..."
+        );
+    console.log(
+        "Subscribed channel details:",
+        JSON.stringify(subscribedChannel, null, 2)
+    );
 
     const modifiesChannelDetails = subscribedChannel.map((channel) => {
         return channel.SubscribedChannelsDetails[0];
-    })
+    });
 
     // This is only the subscribed channel details
     // console.log("This is only the channel details:", modifiesChannelDetails);
@@ -102,8 +118,8 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 modifiesChannelDetails,
                 "Successfully fetched subscribed channel!!!"
             )
-        )
-})
+        );
+});
 
 // This is the method to retrive how many subscriber I have
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
@@ -116,8 +132,8 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const subscriber = await Subscription.aggregate([
         {
             $match: {
-                channel: channelId
-            }
+                channel: channelId,
+            },
         },
         {
             $lookup: {
@@ -131,26 +147,30 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                             username: 1,
                             fullName: 1,
                             avatar: 1,
-                            coverImage: 1
-                        }
-                    }
-                ]
-            }
+                            coverImage: 1,
+                        },
+                    },
+                ],
+            },
         },
         {
             $project: {
                 _id: 1,
-                subscriberDetails: 1
-            }
-        }
-    ])
-    if(!subscriber) throw new ApiError(500,"something went wrong while fecthing data...");
-    console.log("Subscribed channel details:", JSON.stringify(subscriber, null, 2));
+                subscriberDetails: 1,
+            },
+        },
+    ]);
+    if (!subscriber)
+        throw new ApiError(500, "something went wrong while fecthing data...");
+    console.log(
+        "Subscribed channel details:",
+        JSON.stringify(subscriber, null, 2)
+    );
 
     const modifiesSubscribersDetails = subscriber.map((subscriber) => {
         return subscriber.subscriberDetails[0];
-    })
-    
+    });
+
     // This is only the subscribed channel details
     // console.log("This is only the channel details:", modifiesSubscribersDetails);
     return res
@@ -161,8 +181,25 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                 modifiesSubscribersDetails,
                 "Successfully fetched subscribed channel!!!"
             )
-        )
-})
+        );
+});
 
+// This is a method to toggle subscription of a channel
+// const toggleSubscription = asyncHandler(async (req, res) => {
+//     const channelId = new mongoose.Types.ObjectId(req.params.channelId);
+//     const userId = new mongoose.Types.ObjectId(req.user?._id);
 
-export { addSubscription, getSubscribedChannels, getUserChannelSubscribers };
+//     const removeSubscription = await Subscription.findOne({
+//         subscriber: userId,
+//         channel: channelId,
+//     });
+
+//     console.log("Remove subscription response:", removeSubscription);
+// });
+
+export {
+    // addSubscription,
+    getSubscribedChannels,
+    getUserChannelSubscribers,
+    toggleSubscription,
+};
