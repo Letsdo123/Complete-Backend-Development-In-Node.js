@@ -17,10 +17,11 @@ const extractPublicId = (url) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
-
+    console.log("Requested file:",req.files);
     // console.log("Requested information", title, description);
     // getting the video file
     const videoFileLocalPath = req.files?.videoFile[0]?.path;
+    console.log("Local video file usrl:",videoFileLocalPath);
     if (!videoFileLocalPath)
         throw new ApiError(404, "Video file is missing...");
 

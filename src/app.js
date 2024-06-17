@@ -25,11 +25,13 @@ app.use(cookieParser());
 import userRouter from "./routes/user.routes.js";
 import videoRouter from "./routes/video.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
+import playlistRouter from "./routes/playlist.routes.js";
 
 // routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
+app.use("/api/v1/playlist", playlistRouter);
 
 // This is the default get request for checking the server is running or not in the main screen
 app.get("/", (req, res) => {
