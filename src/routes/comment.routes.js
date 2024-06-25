@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { addComment, deleteComment, updateComment } from "../controllers/comment.controller.js";
+import { addComment, deleteComment, getVideoComments, updateComment } from "../controllers/comment.controller.js";
 
 
 
@@ -12,7 +12,7 @@ const router = Router();
 // If logged-in then it will inject the user details inside the request
 router.use(verifyJWT);
 
-router.route("/:videoId").post(addComment);
+router.route("/:videoId").post(addComment).get(getVideoComments);
 router.route("/c/:commentId").delete(deleteComment).patch(updateComment);
 
 export default router;
