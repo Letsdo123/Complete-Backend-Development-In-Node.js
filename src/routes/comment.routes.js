@@ -6,6 +6,21 @@ import { addComment, deleteComment, getVideoComments, updateComment } from "../c
 
 // define the router
 const router = Router();
+/**
+ * @swagger
+ * /api/v1/:
+ *   get:
+ *     summary: Retrieve an example
+ *     description: Retrieve a simple example from the API.
+ *     responses:
+ *       200:
+ *         description: A successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ *               example: This is an example route
+ */
 
 // This is the router that will use for all the routes
 // This will verify the user that the user is logged-in or not

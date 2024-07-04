@@ -49,7 +49,7 @@ const userSchema = new Schema(
     { timestamps: true }
 )
 
-// encrypt the password using bcrypt
+// encrypt the password using bcrypt before saving into the database
 userSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         this.password = await bcrypt.hash(this.password, 10);
