@@ -16,4 +16,4 @@ const asyncHandlerOne = (fn) => async (req,res,next)=>{
     }
 }
 
-export {asyncHandler}
+export {asyncHandler,asyncHandlerOne}
